@@ -2,6 +2,11 @@
 https://github.com/dennybritz/rnn-tutorial-rnnlm/
 """
 
+import csv
+import itertools
+import numpy as np
+import nltk
+
 # preprocessing ----------------------------------------------------------------
 
 vocabulary_size = 8000
@@ -11,11 +16,11 @@ sentence_end_token = "SENTENCE_END"
 
 # Read the data and append SENTENCE_START and SENTENCE_END tokens
 print("Reading CSV file...")
-with open('../data/reddit_data/reddit-comments-2015-08.csv', 'rb') as f:
+with open('data/reddit_data/reddit-comments-2015-08.csv') as f:
     reader = csv.reader(f, skipinitialspace=True)
-    reader.next()
+    next(reader)
     # Split full comments into sentences
-    sentences = itertools.chain(*[nltk.sent_tokenize(x[0].decode('utf-8').lower()) for x in reader])
+    sentences = itertools.chain(*[nltk.sent_tokenize(x[0].lower()) for x in reader])
     # Append SENTENCE_START and SENTENCE_END
     sentences = ["%s %s %s" % (sentence_start_token, x, sentence_end_token) for x in sentences]
 print("Parsed %d sentences." % (len(sentences)))
@@ -40,9 +45,6 @@ print("The least frequent word in our vocabulary is '%s' and appeared %d times."
 for i, sent in enumerate(tokenized_sentences):
     tokenized_sentences[i] = [w if w in word_to_index else unknown_token for w in sent]
 
-# Create the training data
+# Create the training data - numpy arrays of lists containing word indices
 X_train = np.asarray([[word_to_index[w] for w in sent[:-1]] for sent in tokenized_sentences])
 y_train = np.asarray([[word_to_index[w] for w in sent[1:]] for sent in tokenized_sentences])
-
-print(X_train.shape)
-print(Y_train.shape)
