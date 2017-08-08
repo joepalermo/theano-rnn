@@ -6,17 +6,20 @@ import csv
 import itertools
 import numpy as np
 import nltk
+from utils import pp_output
+from MyRNN import RNN
 
 # preprocessing ----------------------------------------------------------------
 
-vocabulary_size = 8000
+vocabulary_size = 500
+state_size = 100
 unknown_token = "UNKNOWN_TOKEN"
 sentence_start_token = "SENTENCE_START"
 sentence_end_token = "SENTENCE_END"
 
 # Read the data and append SENTENCE_START and SENTENCE_END tokens
 print("Reading CSV file...")
-with open('data/reddit_data/reddit-comments-2015-08.csv') as f:
+with open('data/reddit_data/reddit-comments-small.csv') as f:
     reader = csv.reader(f, skipinitialspace=True)
     next(reader)
     # Split full comments into sentences
@@ -46,5 +49,16 @@ for i, sent in enumerate(tokenized_sentences):
     tokenized_sentences[i] = [w if w in word_to_index else unknown_token for w in sent]
 
 # Create the training data - numpy arrays of lists containing word indices
-X_train = np.asarray([[word_to_index[w] for w in sent[:-1]] for sent in tokenized_sentences])
+x_train = np.asarray([[word_to_index[w] for w in sent[:-1]] for sent in tokenized_sentences])
 y_train = np.asarray([[word_to_index[w] for w in sent[1:]] for sent in tokenized_sentences])
+training_data = (x_train, y_train)
+
+
+# define a model and train it
+model = RNN(vocabulary_size, state_size=state_size)
+# model.sgd(training_data, learning_rate=0.005, num_epochs=3)
+
+# get word predictions for a sample of inputs
+outputs = model.get_predictions(x_test)
+for o in outputs:
+    print(pp_output(o, index_to_word))
