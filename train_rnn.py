@@ -1,64 +1,52 @@
-"""most of the code is copied from Danny Britz
-https://github.com/dennybritz/rnn-tutorial-rnnlm/
-"""
+import argparse
+from parse_reddit_data import parse_reddit_data
+from utils import pp_output, save_model_parameters, load_model_parameters
+from RNN import RNN
 
-import csv
-import itertools
-import numpy as np
-import nltk
-from utils import pp_output
-from MyRNN import RNN
+def main(vocab_size, state_size, bptt_truncate, model_path, data_path,
+         num_epochs, learning_rate):
+    # create an RNN, if possible load pre-existing model parameters
+    if model_path:
+        model_parameters = load_model_parameters(model_path)
+        model = RNN(vocab_size, state_size, bptt_truncate, model_parameters)
+    else:
+        model = RNN(vocab_size, state_size, bptt_truncate)
 
-# preprocessing ----------------------------------------------------------------
+    # construct datasets
+    training_data, validation_data, test_data, index_to_word = \
+    parse_reddit_data(vocab_size, data_path)
 
-vocabulary_size = 500
-state_size = 100
-unknown_token = "UNKNOWN_TOKEN"
-sentence_start_token = "SENTENCE_START"
-sentence_end_token = "SENTENCE_END"
+    # train the model
+    model.sgd(training_data, num_epochs, learning_rate, validation_data)
 
-# Read the data and append SENTENCE_START and SENTENCE_END tokens
-print("Reading CSV file...")
-with open('data/reddit_data/reddit-comments-small.csv') as f:
-    reader = csv.reader(f, skipinitialspace=True)
-    next(reader)
-    # Split full comments into sentences
-    sentences = itertools.chain(*[nltk.sent_tokenize(x[0].lower()) for x in reader])
-    # Append SENTENCE_START and SENTENCE_END
-    sentences = ["%s %s %s" % (sentence_start_token, x, sentence_end_token) for x in sentences]
-print("Parsed %d sentences." % (len(sentences)))
+    # get word predictions for a sample of inputs
+    test_inputs = test_data[0]
+    outputs = model.get_predictions(test_inputs)
+    for o in outputs:
+        print(pp_output(o, index_to_word))
 
-# Tokenize the sentences into words
-tokenized_sentences = [nltk.word_tokenize(sent) for sent in sentences]
-
-# Count the word frequencies
-word_freq = nltk.FreqDist(itertools.chain(*tokenized_sentences))
-print("Found %d unique words tokens." % len(word_freq.items()))
-
-# Get the most common words and build index_to_word and word_to_index vectors
-vocab = word_freq.most_common(vocabulary_size-1)
-index_to_word = [x[0] for x in vocab]
-index_to_word.append(unknown_token)
-word_to_index = dict([(w,i) for i,w in enumerate(index_to_word)])
-
-print("Using vocabulary size %d." % vocabulary_size)
-print("The least frequent word in our vocabulary is '%s' and appeared %d times." % (vocab[-1][0], vocab[-1][1]))
-
-# Replace all words not in our vocabulary with the unknown token
-for i, sent in enumerate(tokenized_sentences):
-    tokenized_sentences[i] = [w if w in word_to_index else unknown_token for w in sent]
-
-# Create the training data - numpy arrays of lists containing word indices
-x_train = np.asarray([[word_to_index[w] for w in sent[:-1]] for sent in tokenized_sentences])
-y_train = np.asarray([[word_to_index[w] for w in sent[1:]] for sent in tokenized_sentences])
-training_data = (x_train, y_train)
-
-
-# define a model and train it
-model = RNN(vocabulary_size, state_size=state_size)
-# model.sgd(training_data, learning_rate=0.005, num_epochs=3)
-
-# get word predictions for a sample of inputs
-outputs = model.get_predictions(x_test)
-for o in outputs:
-    print(pp_output(o, index_to_word))
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--vocab_size', type=int, default=1000,
+                      help='the size of the model\'s vocabulary')
+    parser.add_argument('--state_size', type=int, default=100,
+                      help='the size of the model\'s state')
+    parser.add_argument('--bptt_truncate', type=int, default=3,
+                      help='number of timesteps until bptt truncation')
+    parser.add_argument('--model_path', type=str,
+                      help='the relative path to saved model parameters')
+    parser.add_argument('--data_path', type=str,
+                      default='data/reddit_data/reddit-comments-small.csv',
+                      help='the path to the training/validation/test data')
+    parser.add_argument('--num_epochs', type=int, default=10,
+                      help='the number of training epochs')
+    parser.add_argument('--learning_rate', type=float, default=0.05,
+                      help='the learning rate')
+    args = parser.parse_args()
+    main(args.vocab_size,
+         args.state_size,
+         args.bptt_truncate,
+         args.model_path,
+         args.data_path,
+         args.num_epochs,
+         args.learning_rate)
