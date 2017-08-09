@@ -28,7 +28,7 @@ def parse_reddit_data(vocab_size, data_path, data_split=[0.8,0.1,0.1]):
 
     # Read the data and append SENTENCE_START and SENTENCE_END tokens
     print("Reading CSV file...")
-    with open('data/reddit_data/reddit-comments-small.csv') as f:
+    with open(data_path) as f:
         reader = csv.reader(f, skipinitialspace=True)
         next(reader)
         # Split full comments into sentences
