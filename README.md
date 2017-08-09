@@ -1,9 +1,15 @@
-to get nltk punkt:
+This is an implementation of a recurrent neural network in Theano. The code is
+in large part inspired by an implementation by Danny Britz
+(https://github.com/dennybritz/rnn-tutorial-rnnlm).
+
+Note that nltk punkt is a requirement for running the data parsing code.
+
+To get nltk punkt:
 1) Start the Python interpreter
 2) import nltk
 3) nltk.donwload('punkt')
 
-if you run into the following error message at step 3:
+If you run into the following error message at step 3:
 
 [nltk_data] Error loading punkt: <urlopen error [SSL:
 [nltk_data]     CERTIFICATE_VERIFY_FAILED] certificate verify failed
