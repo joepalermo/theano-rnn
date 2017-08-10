@@ -8,7 +8,7 @@ def pp_output(output, index_to_word):
     return " ".join([index_to_word[i] for i in output])
 
 def save_model_parameters(model, model_dir):
-    save_params_as = model_dir + "/" + datetime.now().strftime("%Y-%m-%d-%H:%M")
+    save_params_as = model_dir + "/best_model"
     model_params = dict()
     model_params['U'] = model.U.get_value()
     model_params['W'] = model.W.get_value()
