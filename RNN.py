@@ -5,6 +5,7 @@ https://github.com/dennybritz/rnn-tutorial-rnnlm/
 import numpy as np
 import theano as theano
 import theano.tensor as T
+from utils import save_model_parameters
 
 class RNN:
 
@@ -65,26 +66,35 @@ class RNN:
         return cumulative_cost/num_examples
 
     def sgd(self, training_data, num_epochs, learning_rate,
-            validation_data=None, test_data=None):
+            validation_data, test_data, model_dir):
         """Perform stochastic gradient descent."""
+
+        # extract the features and the labels
         x_train, y_train = training_data
-        if validation_data:
-            x_validation, y_validation = validation_data
-        num_examples = len(x_train)
+        x_validation, y_validation = validation_data
+        x_test, y_test = test_data
+        num_training_examples = len(x_train)
+        best_validation_cost = float("inf")
+        # train for some number of epochs
         for epoch_i in range(num_epochs):
             # shuffle the training data
-            perm = np.arange(num_examples)
+            perm = np.arange(num_training_examples)
             np.random.shuffle(perm)
             x_train = x_train[perm]
             y_train = y_train[perm]
             print("training epoch {}".format(epoch_i))
             # update parameters once for each training example
-            for i in range(num_examples):
-                self.train_on_example(x_train[i],y_train[i],learning_rate)
+            for i in range(num_training_examples):
+                self.train_on_example(x_train[i], y_train[i], learning_rate)
             # compute post-epoch validation cost
-            if validation_data:
-                validation_cost = self.compute_cost(x_validation, y_validation)
-                print("validation cost at epoch {} is: {}".format(epoch_i, validation_cost))
+            validation_cost = self.compute_cost(x_validation, y_validation)
+            print("validation cost at epoch {} is: {}".format(epoch_i, validation_cost))
+            if validation_cost < best_validation_cost:
+                print("this is the best validation cost so far")
+                best_validation_cost = validation_cost
+                # attempt to save the model parameters
+                if model_dir:
+                    save_model_parameters(self, model_dir)
 
     def get_predictions(self, inputs):
         """Produce outputs for a set of inputs. Parameter inputs are represented

@@ -1,10 +1,11 @@
+import os
 import argparse
 from parse_reddit_data import parse_reddit_data
-from utils import pp_output, save_model_parameters, load_model_parameters
+from utils import pp_output, load_model_parameters
 from RNN import RNN
 
-def main(vocab_size, state_size, bptt_truncate, model_path, data_path,
-         num_epochs, learning_rate):
+def train(vocab_size, state_size, bptt_truncate, model_path, data_path,
+         num_epochs, learning_rate, model_dir):
     # create an RNN, if possible load pre-existing model parameters
     if model_path:
         model_parameters = load_model_parameters(model_path)
@@ -17,7 +18,8 @@ def main(vocab_size, state_size, bptt_truncate, model_path, data_path,
     parse_reddit_data(vocab_size, data_path)
 
     # train the model
-    model.sgd(training_data, num_epochs, learning_rate, validation_data)
+    model.sgd(training_data, num_epochs, learning_rate, validation_data,
+              test_data, model_dir)
 
     # get word predictions for a sample of inputs
     test_inputs = test_data[0]
@@ -42,11 +44,14 @@ if __name__ == '__main__':
                       help='the number of training epochs')
     parser.add_argument('--learning_rate', type=float, default=0.05,
                       help='the learning rate')
+    parser.add_argument('--model_dir', type=str, default=None,
+                      help='the path to a directory to save models to')
     args = parser.parse_args()
-    main(args.vocab_size,
+    train(args.vocab_size,
          args.state_size,
          args.bptt_truncate,
          args.model_path,
          args.data_path,
          args.num_epochs,
-         args.learning_rate)
+         args.learning_rate,
+         args.model_dir)
