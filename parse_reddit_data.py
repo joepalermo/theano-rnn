@@ -87,4 +87,4 @@ def parse_reddit_data(vocab_size, data_path, data_split=[0.8,0.1,0.1]):
     else:
         test_data = None
 
-    return (training_data, validation_data, test_data, index_to_word)
+    return (training_data, validation_data, test_data)

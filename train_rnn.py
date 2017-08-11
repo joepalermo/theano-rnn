@@ -14,18 +14,12 @@ def train(vocab_size, state_size, bptt_truncate, model_path, data_path,
         model = RNN(vocab_size, state_size, bptt_truncate)
 
     # construct datasets
-    training_data, validation_data, test_data, index_to_word = \
+    training_data, validation_data, test_data = \
     parse_reddit_data(vocab_size, data_path)
 
     # train the model
     model.sgd(training_data, num_epochs, learning_rate, validation_data,
               test_data, model_dir)
-
-    # get word predictions for a sample of inputs
-    test_inputs = test_data[0]
-    outputs = model.get_predictions(test_inputs)
-    for o in outputs:
-        print(pp_output(o, index_to_word))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -38,7 +32,7 @@ if __name__ == '__main__':
     parser.add_argument('--model_path', type=str,
                       help='the relative path to saved model parameters')
     parser.add_argument('--data_path', type=str,
-                      default='data/reddit_data/reddit-comments-small.csv',
+                      default='data/reddit_data/reddit-comments.csv',
                       help='the path to the training/validation/test data')
     parser.add_argument('--num_epochs', type=int, default=10,
                       help='the number of training epochs')
